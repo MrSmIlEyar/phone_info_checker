@@ -1,0 +1,12 @@
+FROM python:3.10-alpine
+
+RUN apk add --no-cache \
+    postgresql-dev \
+    gcc \
+    musl-dev
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+CMD ["sh", "-c", "touch /var/log/cron.log && crond -f && echo '*/1 * * * python manage.py update_data >> /var/log/cron.log 2>&1' | crontab - && tail -f /var/log/cron.log"]

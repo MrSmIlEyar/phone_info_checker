@@ -1,0 +1,70 @@
+services:
+  db:
+    image: postgres:17-alpine
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - pic-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d phone_info_checker" ]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+  web:
+    build: .
+    command: >
+      bash -c "python manage.py migrate
+      && gunicorn --bind 0.0.0.0:8000 --workers 3 phone_info_checker.wsgi:application"
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - pic-network
+
+  cron:
+    image: python:3.10-alpine
+    volumes:
+      - .:/app
+    command: >
+      sh -c "apk add --no-cache build-base postgresql-dev && 
+             pip install --no-cache-dir -r /app/requirements.txt && 
+             echo '* */12 * * * /usr/local/bin/python /app/manage.py update_data >> /var/log/cron.log 2>&1' | crontab - && 
+             crond -f"
+    environment:
+      PYTHONPATH: "/app:$PYTHONPATH"
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - pic-network
+
+volumes:
+  postgres_data:
+
+networks:
+  pic-network:
+    driver: bridge

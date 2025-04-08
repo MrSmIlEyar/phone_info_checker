@@ -1,0 +1,35 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проверка оператора и региона</title>
+    <link rel="stylesheet" href="{% static 'pic/css/index.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1>Проверка оператора и региона</h1>
+        <div class="form-group">
+            <label for="phoneInput">Введите номер телефона:</label>
+            <input type="text"
+                   id="phoneInput"
+                   placeholder="+7 (XXX) XXX-XX-XX"
+                   maxlength="18">
+            <div class="error-message" id="errorMessage"></div>
+        </div>
+        <button class="submit-btn" id="checkButton">Проверить</button>
+
+        <div class="result-block" id="resultContainer" style="display: none;">
+            <h2>Результат проверки:</h2>
+            <p><strong>Номер:</strong> <span id="resultPhone"></span></p>
+            <p><strong>Оператор:</strong> <span id="resultOperator"></span></p>
+            <p><strong>Регион:</strong> <span id="resultRegion"></span></p>
+            <p><strong>Территория:</strong> <span id="resultTerritory"></span></p>
+            <p><strong>ИНН:</strong> <span id="resultInn"></span></p>
+        </div>
+    </div>
+
+    <script src="{% static 'pic/js/script.js' %}"></script>
+</body>
+</html>
